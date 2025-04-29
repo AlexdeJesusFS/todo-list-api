@@ -6,7 +6,7 @@ authors = [
     {name = "AlexdeJesusFS",email = "alexjesus0116@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = "^3.13" # equivalente ao ">=", mas evita erro do pip-audit com esse operador
 dependencies = [
 ]
 
