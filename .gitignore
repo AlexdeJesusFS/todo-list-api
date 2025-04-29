@@ -19,7 +19,6 @@ env/                        # Outro nome comum para ambientes virtuais
 
 # Poetry
 .poetry/                    # Cache interno do Poetry (raro, mas pode aparecer)
-poetry.lock                 # Opcional: ignore se não quiser versionar (recomendo versionar)
 
 # Ruff
 .ruff_cache/                # Cache do Ruff para acelerar linting e formatação
