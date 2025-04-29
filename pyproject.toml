@@ -1,0 +1,23 @@
+[project]
+name = "todo-list-api"
+version = "0.1.0"
+description = "To-do list API to manage your tasks."
+authors = [
+    {name = "AlexdeJesusFS",email = "alexjesus0116@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.11.7"
+pre-commit = "^4.2.0"
+pip-audit = "^2.9.0"
+mypy = "^1.15.0"
+
