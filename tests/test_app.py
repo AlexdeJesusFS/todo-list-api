@@ -11,3 +11,13 @@ def test_root_should_return_ok_and_HelloWord() -> None:
 
     assert response.status_code == http_status.HTTP_200_OK  # Assert (afirmar)
     assert response.json() == {'message': 'Hello World!'}
+
+
+# exercise 2
+def test_html_should_return_ok_and_HTML() -> None:
+    client = TestClient(app)
+
+    response = client.get('html')
+
+    assert response.status_code == http_status.HTTP_200_OK
+    assert '<h1>Hello World!</h1>' in response.text
