@@ -4,7 +4,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi import status as http_status
 from fastapi.responses import HTMLResponse
 
-from src.schemas import user as user_schemas
+from src.models import user as user_schemas
 
 app = FastAPI()
 
@@ -41,9 +41,7 @@ database = []  # type: ignore  # ignora o erro "var-annotated"
     response_model=user_schemas.UserResponse,
 )
 def create_user(user: user_schemas.UserInput):
-    user_with_id = user_schemas.UserDB(
-        **user.model_dump(), id=len(database) + 1
-    )
+    user_with_id = user_schemas.User(**user.model_dump(), id=len(database) + 1)
 
     database.append(user_with_id)
 
@@ -76,7 +74,7 @@ def update_user(user_id: int, user: user_schemas.UserInput):
             status_code=http_status.HTTP_404_NOT_FOUND, detail='User not found'
         )
 
-    user_with_id = user_schemas.UserDB(**user.model_dump(), id=user_id)
+    user_with_id = user_schemas.User(**user.model_dump(), id=user_id)
     database[user_id - 1] = user_with_id
 
     return user_with_id
