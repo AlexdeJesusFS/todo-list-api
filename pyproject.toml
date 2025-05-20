@@ -8,7 +8,10 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.13,<4.0"
 dependencies = [
-    "fastapi[standard] (>=0.115.12,<0.116.0)"
+    "fastapi[standard] (>=0.115.12,<0.116.0)",
+    "sqlmodel (>=0.0.24,<0.0.25)",
+    "pydantic-settings (>=2.9.1,<3.0.0)",
+    "alembic (>=1.15.2,<2.0.0)"
 ]
 
 
@@ -39,6 +42,11 @@ select = ["I", "F", "E", "W", "PL", "PT"]
 preview = true
 quote-style = "single"
 
+# mypy
+[tool.mypy]
+python_version = "3.13"
+exclude = ["^migrations/", "^tests/"]
+
 # seção pytest
 [tool.pytest.ini_options]
 pythonpath = "."
@@ -46,10 +54,10 @@ addopts = "-p no:warnings"
 
 [tool.taskipy.tasks]
 lint = "ruff check"
-pre_format = "ruff check --fix"
+pre-format = "ruff check --fix"
 format = "ruff format"
-run = "fastapi dev src/app.py"
-pre_test = "task lint"
+dev = "fastapi dev src/app.py"
+pre-test = "task lint"
 test = "pytest -s -x --cov=src -vv"
-post_test = "coverage html"
+post-test = "coverage html"
 pre-commit = "pre-commit run --all-files"
