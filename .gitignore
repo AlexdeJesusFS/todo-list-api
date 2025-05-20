@@ -50,6 +50,10 @@ Thumbs.db                   # Arquivo do Windows
 # Outros
 *.env                       # Arquivos de variáveis de ambiente (ex.: chaves secretas)
 secrets/                    # Diretório de segredos (se houver)
+.env
 
 #pytest-cov
 .coverage
+
+# sqlite databse
+database.db
