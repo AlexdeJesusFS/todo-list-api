@@ -1,5 +1,3 @@
-# mypy: disable-error-code="no-untyped-def"
-
 from fastapi import status as http_status
 
 

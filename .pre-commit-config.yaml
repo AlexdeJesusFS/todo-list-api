@@ -25,6 +25,7 @@ repos:
   - id: mypy
     args: [--strict, --show-error-codes]
     additional_dependencies: ["fastapi", "uvicorn", "pytest", "sqlmodel", "sqlalchemy"]
+    exclude: ^(tests/|migrations/)
 
 ci:
   # evita bloqueio da rede causado por padrão pelo `pre-commit.ci`
