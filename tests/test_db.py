@@ -1,5 +1,3 @@
-# mypy: disable-error-code="no-untyped-def"
-
 from sqlmodel import select
 
 from src.models.user import User

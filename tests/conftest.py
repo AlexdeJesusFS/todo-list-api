@@ -1,5 +1,3 @@
-# mypy: disable-error-code="no-untyped-def"
-
 from contextlib import contextmanager
 from datetime import datetime
 
