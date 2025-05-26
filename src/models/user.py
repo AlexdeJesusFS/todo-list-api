@@ -15,6 +15,8 @@ class UserResponse(SQLModel):
     id: int
     username: str
     email: EmailStr
+    created_at: datetime
+    updated_at: datetime
 
 
 class ListUserResponse(SQLModel):
