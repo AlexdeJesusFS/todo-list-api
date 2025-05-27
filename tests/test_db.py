@@ -4,7 +4,7 @@ from src.models.user import User
 
 
 def test_create_user(session, mock_db_time):
-    with mock_db_time(model=User) as (create_time):
+    with mock_db_time(model=User) as (create_time, update_time):
         new_user = User(
             username='Lex', password='s&cret', email='lex@mail.com'
         )
