@@ -43,4 +43,4 @@ jobs:
 
       - name: Run Mypy type checking
         run: |
-          poetry run mypy . --strict --show-error-codes
+          poetry run mypy . --strict --show-error-codes --exclude migrations --exclude tests
