@@ -24,7 +24,7 @@ repos:
   hooks:
   - id: mypy
     args: [--strict, --show-error-codes]
-    additional_dependencies: ["fastapi", "uvicorn", "pytest", "sqlmodel", "sqlalchemy", pydantic_settings]
+    additional_dependencies: ["fastapi", "uvicorn", "pytest", "sqlmodel", "sqlalchemy", "pydantic_settings", "jwt", "pwdlib"]
     exclude: ^(tests/|migrations/)
 
 ci:
