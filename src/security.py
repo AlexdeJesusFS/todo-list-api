@@ -18,7 +18,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 pwd_context = PasswordHash.recommended()
 
 
-def create_access_token(data: dict[str, datetime]) -> str:
+def create_access_token(data: dict[str, str | datetime]) -> str:
     to_encode = data.copy()
     expire = datetime.now(tz=ZoneInfo('UTC')) + timedelta(
         minutes=ACCESS_TOKEN_EXPIRE_MINUTES
