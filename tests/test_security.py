@@ -1,14 +1,16 @@
 from fastapi import status as http_status
 from jwt import decode
 
-from src.security import SECRET_KEY, create_access_token
+from src.security import create_access_token, settings
 
 
 def test_jwt():
     data = {'test': 'test'}
     token = create_access_token(data)
 
-    decoded = decode(token, SECRET_KEY, algorithms=['HS256'])
+    decoded = decode(
+        token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+    )
 
     assert decoded['test'] == data['test']
     assert 'exp' in decoded
@@ -17,21 +19,21 @@ def test_jwt():
 def test_get_current_user_UNAUTHORIZED(client):
     # invalid token DecodeError
     response_invalid_token = client.delete(
-        '/user/0',
+        '/users/0',
         headers={'Authorization': 'Bearer invalid-token'},
     )
 
     # token without sub
     token = create_access_token({'without-sub': 'None'})
     response_without_sub = client.delete(
-        '/user/0',
+        '/users/0',
         headers={'Authorization': f'Bearer {token}'},
     )
 
     # token noneexistent user
     token = create_access_token({'sub': 'noneexistent@mail.com'})
     response_noneexistent_user = client.delete(
-        '/user/0',
+        '/users/0',
         headers={'Authorization': f'Bearer {token}'},
     )
 
