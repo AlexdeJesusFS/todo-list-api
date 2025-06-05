@@ -9,6 +9,7 @@ from sqlmodel import Session, SQLModel, StaticPool, create_engine
 from src.app import app
 from src.database import get_session
 from src.models import user as user_models
+from src.security import get_password_hash
 
 
 @pytest.fixture
@@ -72,10 +73,26 @@ def mock_db_time():
 
 @pytest.fixture
 def user(session):
+    password = 'Test@'
     user = user_models.User(
-        username='Tester', email='tester@test.com', password='Test@0'
+        username='Tester',
+        email='tester@test.com',
+        password=get_password_hash(password),
     )
     session.add(user)
     session.commit()
     session.refresh(user)
-    return user
+
+    return {'user': user, 'clean_password': password}
+
+
+@pytest.fixture
+def token(client, user):
+    response = client.post(
+        '/auth/token',
+        data={
+            'username': user['user'].email,
+            'password': user['clean_password'],
+        },
+    )
+    return response.json()['access_token']

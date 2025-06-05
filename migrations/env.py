@@ -5,7 +5,7 @@ from sqlalchemy import pool
 
 from alembic import context
 from sqlmodel import SQLModel
-from settings import Settings
+from src.settings import Settings
 import pathlib
 import importlib.util
 import sys
