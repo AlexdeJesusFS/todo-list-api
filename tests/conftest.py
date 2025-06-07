@@ -1,10 +1,12 @@
-from contextlib import contextmanager
+from contextlib import asynccontextmanager
 from datetime import datetime
 
 import pytest
+import pytest_asyncio
 from fastapi.testclient import TestClient
 from sqlalchemy import event
-from sqlmodel import Session, SQLModel, StaticPool, create_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlmodel import SQLModel, StaticPool
 
 from src.app import app
 from src.database import get_session
@@ -24,24 +26,28 @@ def client(session):
     app.dependency_overrides.clear()
 
 
-@pytest.fixture
-def session(mock_db_time):
-    engine = create_engine(
-        'sqlite:///:memory:',
+@pytest_asyncio.fixture
+async def session(mock_db_time):
+    engine = create_async_engine(
+        'sqlite+aiosqlite:///:memory:',
         connect_args={'check_same_thread': False},
         poolclass=StaticPool,
     )
-    SQLModel.metadata.create_all(engine)
+    async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.create_all)
 
-    with mock_db_time(model=user_models.User):
-        with Session(engine) as session:
+    async with mock_db_time(model=user_models.User):
+        async with AsyncSession(engine, expire_on_commit=False) as session:
             yield session
 
-    SQLModel.metadata.drop_all(engine)
+    async with engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.drop_all)
+
+    await engine.dispose()
 
 
-@contextmanager
-def _mock_db_time(
+@asynccontextmanager
+async def _mock_db_time(
     *,
     model,
     create_time=datetime(2025, 1, 1),
@@ -60,19 +66,20 @@ def _mock_db_time(
     event.listen(model, 'before_insert', fake_created_time_hook)
     event.listen(model, 'before_update', fake_updated_time_hook)
 
-    yield create_time, update_time
+    try:
+        yield create_time, update_time
+    finally:
+        event.remove(model, 'before_insert', fake_created_time_hook)
+        event.remove(model, 'before_update', fake_updated_time_hook)
 
-    event.remove(model, 'before_insert', fake_created_time_hook)
-    event.remove(model, 'before_update', fake_updated_time_hook)
 
-
-@pytest.fixture
+@pytest_asyncio.fixture
 def mock_db_time():
     return _mock_db_time
 
 
-@pytest.fixture
-def user(session):
+@pytest_asyncio.fixture
+async def user(session):
     password = 'Test@'
     user = user_models.User(
         username='Tester',
@@ -80,8 +87,8 @@ def user(session):
         password=get_password_hash(password),
     )
     session.add(user)
-    session.commit()
-    session.refresh(user)
+    await session.commit()
+    await session.refresh(user)
 
     return {'user': user, 'clean_password': password}
 

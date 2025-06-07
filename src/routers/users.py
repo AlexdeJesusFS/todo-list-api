@@ -5,7 +5,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi import status as http_status
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import Session, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import or_, select
 
 from src.database import get_session
 from src.models import user as user_models
@@ -17,7 +18,7 @@ from src.security import (
 
 router = APIRouter(prefix='/users', tags=['users'])
 
-SessionDep = Annotated[Session, Depends(get_session)]
+SessionDep = Annotated[AsyncSession, Depends(get_session)]
 CurrentUserDep = Annotated[user_models.User, Depends(get_current_user)]
 
 
@@ -26,8 +27,8 @@ CurrentUserDep = Annotated[user_models.User, Depends(get_current_user)]
     status_code=http_status.HTTP_201_CREATED,
     response_model=user_models.UserResponse,
 )
-def create_user(user: user_models.UserInput, session: SessionDep):
-    db_user = session.scalar(
+async def create_user(user: user_models.UserInput, session: SessionDep):
+    db_user = await session.scalar(
         select(user_models.User).where(
             or_(
                 user_models.User.username == user.username,
@@ -54,8 +55,8 @@ def create_user(user: user_models.UserInput, session: SessionDep):
 
     db_user = user_models.User(**user_dict)
     session.add(db_user)
-    session.commit()
-    session.refresh(db_user)
+    await session.commit()
+    await session.refresh(db_user)
 
     return db_user
 
@@ -65,8 +66,8 @@ def create_user(user: user_models.UserInput, session: SessionDep):
     status_code=http_status.HTTP_200_OK,
     response_model=user_models.UserResponse,
 )
-def get_one_user(user_id: int, session: SessionDep):
-    db_user = session.scalar(
+async def get_one_user(user_id: int, session: SessionDep):
+    db_user = await session.scalar(
         select(user_models.User).where(user_models.User.id == user_id)
     )
     if not db_user:
@@ -78,20 +79,21 @@ def get_one_user(user_id: int, session: SessionDep):
 
 
 @router.get('/', response_model=user_models.ListUserResponse)
-def get_users_list(
+async def get_users_list(
     session: SessionDep, filter_users: Annotated[FilterPage, Query()]
 ):
-    users = session.exec(
+    query = await session.scalars(
         select(user_models.User)
         .offset(filter_users.offset)
         .limit(filter_users.limit)
-    ).all()
+    )
+    users = query.all()
 
     return {'users': users}
 
 
 @router.put('/{user_id}', response_model=user_models.UserResponse)
-def update_user(
+async def update_user(
     user_id: int,
     user: user_models.UserInput,
     session: SessionDep,
@@ -110,12 +112,12 @@ def update_user(
 
     try:
         session.add(current_user)
-        session.commit()
-        session.refresh(current_user)
+        await session.commit()
+        await session.refresh(current_user)
 
         return current_user
     except IntegrityError as err:
-        session.rollback()
+        await session.rollback()
         if 'username' in err._message():
             raise HTTPException(
                 status_code=http_status.HTTP_409_CONFLICT,
@@ -129,7 +131,7 @@ def update_user(
 
 
 @router.delete('/{user_id}', response_model=user_models.Message)
-def delete_user(
+async def delete_user(
     user_id: int,
     session: SessionDep,
     current_user: CurrentUserDep,
@@ -140,7 +142,7 @@ def delete_user(
             detail='Not enough permissions',
         )
 
-    session.delete(current_user)
-    session.commit()
+    await session.delete(current_user)
+    await session.commit()
 
     return {'message': 'User deleted'}

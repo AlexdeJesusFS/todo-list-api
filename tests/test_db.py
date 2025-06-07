@@ -1,17 +1,19 @@
+import pytest
 from sqlmodel import select
 
 from src.models.user import User
 
 
-def test_create_user(session, mock_db_time):
-    with mock_db_time(model=User) as (create_time, update_time):
+@pytest.mark.asyncio
+async def test_create_user(session, mock_db_time):
+    async with mock_db_time(model=User) as (create_time, update_time):
         new_user = User(
             username='Lex', password='s&cret', email='lex@mail.com'
         )
         session.add(new_user)
-        session.commit()
+        await session.commit()
 
-    user = session.scalar(select(User).where(User.username == 'Lex'))
+    user = await session.scalar(select(User).where(User.username == 'Lex'))
 
     assert user.dict() == {
         'id': 1,
@@ -23,16 +25,17 @@ def test_create_user(session, mock_db_time):
     }
 
 
-def test_update_user(session, mock_db_time):
-    with mock_db_time(model=User) as (create_time, update_time):
+@pytest.mark.asyncio
+async def test_update_user(session, mock_db_time):
+    async with mock_db_time(model=User) as (create_time, update_time):
         # criando user
         new_user = User(
             username='Lex', password='s&cret', email='lex@mail.com'
         )
         session.add(new_user)
-        session.commit()
+        await session.commit()
 
-        user = session.scalar(select(User).where(User.username == 'Lex'))
+        user = await session.scalar(select(User).where(User.username == 'Lex'))
 
         # atualizando user
         user_updates = {
@@ -47,10 +50,10 @@ def test_update_user(session, mock_db_time):
             setattr(user, attr, value)
 
         session.add(user)
-        session.commit()
+        await session.commit()
 
         # assert
-        updated_user = session.scalar(
+        updated_user = await session.scalar(
             select(User).where(User.username == 'Lexus')
         )
 
