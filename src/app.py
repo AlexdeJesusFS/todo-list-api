@@ -12,12 +12,12 @@ app.include_router(users.router)
 
 
 @app.get('/')
-def root() -> dict[str, str]:
+async def root() -> dict[str, str]:
     return {'message': 'Hello World!'}
 
 
 @app.get('/html', response_class=HTMLResponse)
-def html() -> str:
+async def html() -> str:
     return """
     <!DOCTYPE html>
     <html lang="en">
