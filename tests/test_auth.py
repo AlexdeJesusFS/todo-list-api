@@ -14,7 +14,6 @@ def test_get_token(client, user):
         },
     )
     token = response.json()
-    print('token aqui: ', token)
 
     assert response.status_code == http_status.HTTP_200_OK
     assert 'access_token' in token
