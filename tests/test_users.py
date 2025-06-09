@@ -135,44 +135,38 @@ def test_update_user_should_return_FORBIDDEN(client, other_user, token):
     assert response.json() == {'detail': 'Not enough permissions'}
 
 
-def test_update_user_integrity_error(client, user, token):
-    client.post(
-        '/users/',
-        json={
-            'username': 'lele',
-            'email': 'lele@mail.com',
-            'password': 'pass',
-        },
-    )
+def test_update_user_integrity_error_username(client, user, other_user, token):
+    _user = user['user']
+    _other_user = other_user['user']
 
-    user_id = user['user'].id
-
-    response_username = client.put(
-        f'/users/{user_id}',
+    response = client.put(
+        f'/users/{_user.id}',
         headers={'Authorization': f'Bearer {token}'},
         json={
-            'username': 'lele',
+            'username': _other_user.username,
             'email': 'tester@test.com',
             'password': 'Test@0',
         },
     )
-    response_email = client.put(
-        f'/users/{user_id}',
+    assert response.status_code == http_status.HTTP_409_CONFLICT
+    assert response.json() == {'detail': 'username already exists'}
+
+
+def test_update_user_integrity_error_email(client, user, other_user, token):
+    _user = user['user']
+    _other_user = other_user['user']
+
+    response = client.put(
+        f'/users/{_user.id}',
         headers={'Authorization': f'Bearer {token}'},
         json={
             'username': 'Tester',
-            'email': 'lele@mail.com',
+            'email': _other_user.email,
             'password': 'Test@0',
         },
     )
-
-    assert (
-        response_username.status_code
-        == response_email.status_code
-        == http_status.HTTP_409_CONFLICT
-    )
-    assert response_username.json() == {'detail': 'username already exists'}
-    assert response_email.json() == {'detail': 'email already exists'}
+    assert response.status_code == http_status.HTTP_409_CONFLICT
+    assert response.json() == {'detail': 'email already exists'}
 
 
 def test_delete_user_should_return_OK(client, user, token):
