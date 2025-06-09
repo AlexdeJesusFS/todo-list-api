@@ -20,10 +20,12 @@ def test_create_user(client):
 
 
 def test_create_user_integrity_error(client, user):
+    _user = user['user']
+
     response_username = client.post(
         '/users/',
         json={
-            'username': 'Tester',
+            'username': _user.username,
             'email': 'tester@test.com',
             'password': 'Test@0',
         },
@@ -32,7 +34,7 @@ def test_create_user_integrity_error(client, user):
         '/users/',
         json={
             'username': 'Tester0',
-            'email': 'tester@test.com',
+            'email': _user.email,
             'password': 'Test@0',
         },
     )
@@ -62,13 +64,14 @@ def test_get_user_list_with_users(client, user):
 
 
 def test_get_user_should_return_OK(client, user):
+    _user = user['user']
     response = client.get(f'/users/{user["user"].id}')
 
     assert response.status_code == http_status.HTTP_200_OK
     assert response.json() == {
-        'id': 1,
-        'username': 'Tester',
-        'email': 'tester@test.com',
+        'id': _user.id,
+        'username': _user.username,
+        'email': _user.email,
         'created_at': '2025-01-01T00:00:00',
         'updated_at': '2025-01-01T00:00:00',
     }
@@ -116,9 +119,11 @@ def test_update_user_should_return_UNAUTHORIZED(client, user):
     assert response.json() == {'detail': 'Not authenticated'}
 
 
-def test_update_user_should_return_FORBIDDEN(client, user, token):
+def test_update_user_should_return_FORBIDDEN(client, other_user, token):
+    _other_user = other_user['user']
+
     response = client.put(
-        '/users/0',
+        f'/users/{_other_user.id}',
         headers={'Authorization': f'Bearer {token}'},
         json={
             'username': 'lele',
@@ -189,9 +194,11 @@ def test_delete_user_should_return_UNAUTHORIZED(client, user):
     assert response.json() == {'detail': 'Not authenticated'}
 
 
-def test_delete_user_should_return_FORBIDDEN(client, user, token):
+def test_delete_user_should_return_FORBIDDEN(client, other_user, token):
+    _other_user = other_user['user']
+
     response = client.delete(
-        '/users/0',
+        f'/users/{_other_user.id}',
         headers={'Authorization': f'Bearer {token}'},
     )
 
