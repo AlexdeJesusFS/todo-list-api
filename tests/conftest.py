@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from datetime import datetime
 
+import factory
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
@@ -10,8 +11,17 @@ from sqlmodel import SQLModel, StaticPool
 
 from src.app import app
 from src.database import get_session
-from src.models import user as user_models
+from src.models.user import User
 from src.security import get_password_hash
+
+
+class UserFactory(factory.Factory):
+    class Meta:
+        model = User  # type: ignore
+
+    username = factory.Sequence(lambda n: f'test{n}')
+    email = factory.LazyAttribute(lambda obj: f'{obj.username}@test.com')
+    password = factory.LazyAttribute(lambda obj: f'{obj.username}@')
 
 
 @pytest.fixture
@@ -36,7 +46,7 @@ async def session(mock_db_time):
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
 
-    async with mock_db_time(model=user_models.User):
+    async with mock_db_time(model=User):
         async with AsyncSession(engine, expire_on_commit=False) as session:
             yield session
 
@@ -81,9 +91,20 @@ def mock_db_time():
 @pytest_asyncio.fixture
 async def user(session):
     password = 'Test@'
-    user = user_models.User(
-        username='Tester',
-        email='tester@test.com',
+    user = UserFactory(
+        password=get_password_hash(password),
+    )
+    session.add(user)
+    await session.commit()
+    await session.refresh(user)
+
+    return {'user': user, 'clean_password': password}
+
+
+@pytest_asyncio.fixture
+async def other_user(session):
+    password = 'Test@'
+    user = UserFactory(
         password=get_password_hash(password),
     )
     session.add(user)
@@ -95,11 +116,14 @@ async def user(session):
 
 @pytest.fixture
 def token(client, user):
+    _user = user['user']
+    clean_password = user['clean_password']
+
     response = client.post(
         '/auth/token',
         data={
-            'username': user['user'].email,
-            'password': user['clean_password'],
+            'username': _user.email,
+            'password': clean_password,
         },
     )
     return response.json()['access_token']
