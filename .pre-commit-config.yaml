@@ -15,6 +15,7 @@ repos:
   hooks:
   - id: pip-audit # executa o pip-audit
     # sem args, faz com que reconheça automaticamente o pyproject.toml
+    language: system
     args: []
     stages: [pre-commit] # executa antes de um `git commit`
 
