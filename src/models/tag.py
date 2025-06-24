@@ -1,8 +1,20 @@
 from datetime import datetime
-from typing import Any
+from typing import TypedDict
 
 from sqlalchemy import Column, DateTime, func
 from sqlmodel import Field, SQLModel
+
+
+class TagDict(TypedDict):
+    id: int | None
+    title: str
+    description: str | None
+    text_color: str
+    background_color: str
+    created_at: datetime
+    updated_at: datetime
+    is_active: bool
+    owner_id: int | None
 
 
 class Tag(SQLModel, table=True):
@@ -33,5 +45,5 @@ class Tag(SQLModel, table=True):
 
     def to_dict(
         self,
-    ) -> dict[str, Any]:
+    ) -> dict[str, TagDict]:
         return self.model_dump()
