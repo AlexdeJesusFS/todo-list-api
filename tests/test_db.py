@@ -132,7 +132,6 @@ async def test_create_complete_task(session, user, task, tag, mock_db_time):
         task_db = await session.scalar(
             select(Task).where(Task.id == task_obj.id)
         )
-        print('to_dict aqui:\n', task_db.to_dict(), '\n')
 
         assert task_db.to_dict() == {
             'id': task_obj.id,
