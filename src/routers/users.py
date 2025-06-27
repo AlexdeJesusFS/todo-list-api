@@ -9,8 +9,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import or_, select
 
 from src.database import get_session
-from src.models import user as user_models
 from src.models.pagination import FilterPage
+from src.models.user import (
+    Message,
+    User,
+    UserListResponse,
+    UserRequest,
+    UserResponse,
+)
 from src.security import (
     get_current_user,
     get_password_hash,
@@ -19,20 +25,20 @@ from src.security import (
 router = APIRouter(prefix='/users', tags=['users'])
 
 SessionDep = Annotated[AsyncSession, Depends(get_session)]
-CurrentUserDep = Annotated[user_models.User, Depends(get_current_user)]
+CurrentUserDep = Annotated[User, Depends(get_current_user)]
 
 
 @router.post(
     '/',
     status_code=http_status.HTTP_201_CREATED,
-    response_model=user_models.UserResponse,
+    response_model=UserResponse,
 )
-async def create_user(user: user_models.UserInput, session: SessionDep):
+async def create_user(user: UserRequest, session: SessionDep):
     db_user = await session.scalar(
-        select(user_models.User).where(
+        select(User).where(
             or_(
-                user_models.User.username == user.username,
-                user_models.User.email == user.email,
+                User.username == user.username,
+                User.email == user.email,
             )
         )
     )
@@ -53,7 +59,7 @@ async def create_user(user: user_models.UserInput, session: SessionDep):
     user_dict = user.model_dump()
     user_dict['password'] = hashed_password
 
-    db_user = user_models.User(**user_dict)
+    db_user = User(**user_dict)
     session.add(db_user)
     await session.commit()
     await session.refresh(db_user)
@@ -64,12 +70,10 @@ async def create_user(user: user_models.UserInput, session: SessionDep):
 @router.get(
     '/{user_id}',
     status_code=http_status.HTTP_200_OK,
-    response_model=user_models.UserResponse,
+    response_model=UserResponse,
 )
 async def get_one_user(user_id: int, session: SessionDep):
-    db_user = await session.scalar(
-        select(user_models.User).where(user_models.User.id == user_id)
-    )
+    db_user = await session.scalar(select(User).where(User.id == user_id))
     if not db_user:
         raise HTTPException(
             status_code=http_status.HTTP_404_NOT_FOUND, detail='User not found'
@@ -78,24 +82,22 @@ async def get_one_user(user_id: int, session: SessionDep):
     return db_user
 
 
-@router.get('/', response_model=user_models.ListUserResponse)
+@router.get('/', response_model=UserListResponse)
 async def get_users_list(
     session: SessionDep, filter_users: Annotated[FilterPage, Query()]
 ):
     query = await session.scalars(
-        select(user_models.User)
-        .offset(filter_users.offset)
-        .limit(filter_users.limit)
+        select(User).offset(filter_users.offset).limit(filter_users.limit)
     )
     users = query.all()
 
     return {'users': users}
 
 
-@router.put('/{user_id}', response_model=user_models.UserResponse)
+@router.put('/{user_id}', response_model=UserResponse)
 async def update_user(
     user_id: int,
-    user: user_models.UserInput,
+    user: UserRequest,
     session: SessionDep,
     current_user: CurrentUserDep,
 ):
@@ -130,7 +132,7 @@ async def update_user(
             )
 
 
-@router.delete('/{user_id}', response_model=user_models.Message)
+@router.delete('/{user_id}', response_model=Message)
 async def delete_user(
     user_id: int,
     session: SessionDep,

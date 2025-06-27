@@ -26,7 +26,7 @@ class UserResponse(SQLModel):
     tasks: list[Task]
 
 
-class ListUserResponse(SQLModel):
+class UserListResponse(SQLModel):
     users: list[UserResponse]
 
 
